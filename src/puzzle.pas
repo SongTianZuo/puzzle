@@ -33,6 +33,10 @@ isPlaying : boolean=false;
 isWinned : boolean= false;
 bPlayBgMusic: boolean=true;
 isMoveOneLeft:boolean=false;
+bmp:hBitmap;
+mdc:hdc;
+midBMP:hBitmap; {拼图原图handld，内存图}
+midDC:hdc; {拼图原图dc，内存dc用来画图缓冲}
 
 {拼图}
 map:array[0..5,0..5] of integer =(
@@ -339,20 +343,10 @@ end;  {end click}
 {绘图}
 procedure draw(dc:hdc);
 var
-	bmp,midBMP:hBitmap; {拼图原图handld，内存图}
-	mdc,midDC:hdc; {拼图原图dc，内存dc用来画图缓冲}
 	m, pm:longint;
 	i,j,wi,wj:longint;
 	font: hFont;
 begin 
-	midDC:=CreateCompatibleDC (0);
-	midBMP:=CreateCompatibleBitmap(dc,WINDOW_WIDTH,WINDOW_HEIGHT);
-	SelectObject(midDC,midBMP);
-	
-	bmp:=LoadImage(0,pchar(bmpfile),IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
-	mdc:=CreateCompatibleDC(dc);
-	SelectObject(mdc,bmp);
-
 	SelectObject (midDC,GetStockObject (WHITE_PEN)); //选择白色画笔 
 	SelectObject (midDC,GetStockObject (WHITE_BRUSH)); //选择白色画笔 
 	Rectangle(midDC,0,0,WINDOW_WIDTH,WINDOW_HEIGHT); //画个大距形像背景
@@ -418,10 +412,6 @@ begin
 		end;{没有正在玩}
 	
 	BitBlt(dc,10,10,WINDOW_WIDTH,WINDOW_HEIGHT,midDC,0,0,SRCCOPY);
-
-	DeleteDC(midDC);
-	DeleteObject(midBMP);
-	DeleteDC(mdc);
 end; {end draw}
 
 {消息处理}
@@ -481,6 +471,14 @@ begin
 			hWindow:=window;
 			mciSendString(pchar('open '+bgsound +' type sequencer alias bgs'),nil,0,0);
 			mciSendString(pchar('play bgs notify'),nil,0,window);
+			dc:= GetDC(window); 
+			midDC:=CreateCompatibleDC (0);
+			midBMP:=CreateCompatibleBitmap(dc,WINDOW_WIDTH,WINDOW_HEIGHT);
+			SelectObject(midDC,midBMP);
+			bmp:=LoadImage(0,pchar(bmpfile),IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
+			mdc:=CreateCompatibleDC(dc);
+			SelectObject(mdc,bmp);
+			ReleaseDC(window,dc);
 		end;
 	MM_MCINOTIFY: {播放一次完毕后}
 		begin
@@ -490,6 +488,9 @@ begin
 
 	wm_Destroy: {关闭}
 		begin
+			DeleteDC(midDC);
+			DeleteObject(midBMP);
+			DeleteDC(mdc);
 			PostQuitMessage(0);
 			Exit;
 		end;
