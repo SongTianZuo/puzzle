@@ -146,6 +146,32 @@ begin { }
 		map[i div m,i mod m]:=map[y div m, y mod m];
 		map[y div m, y mod m]:=temp;
 	end;
+
+	//不能完成的拼图bug修复 开始
+	//2015-08-29
+	//感谢贴吧 @东方火修 （http://tieba.baidu.com/home/main?un=东方火修）网友反馈
+
+	//排列的奇偶性判断 y
+	y:=0;
+	for i:=0 to m*m-2 do
+	begin
+		for j:=i+1 to m*m-1 do
+		begin
+			if(map[i div m, i mod m]>map[j div m, j mod m])then
+			begin
+				inc(y);
+			end;
+		end;
+	end;	
+
+	if((y mod 2)<>0)then
+	begin
+		//定理：交换一个排列中的两个数，则排列的奇偶性发生改变
+		temp:=map[m-1,m-1];
+		map[m-1,m-1]:=map[m-1,m-2];
+		map[m-1,m-2]:=temp;
+	end;
+	//不能完成的拼图bug修复 结束
 end;  
   
 {新建游戏}
